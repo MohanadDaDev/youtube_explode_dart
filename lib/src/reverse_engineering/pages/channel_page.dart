@@ -1,4 +1,5 @@
 import 'package:html/parser.dart' as parser;
+import 'package:isolate_manager/isolate_manager.dart';
 
 import '../../exceptions/exceptions.dart';
 import '../../extensions/helpers_extension.dart';
@@ -39,12 +40,12 @@ class ChannelPage extends YoutubePage<_InitialData> {
       : super(parser.parse(raw), (root) => _InitialData(root));
 
   ///
-  static Future<ChannelPage> get(YoutubeHttpClient httpClient, String id) {
+  static Future<ChannelPage> get(YoutubeHttpClient httpClient, String id, IsolateManager<ChannelPage, String> isolate) {
     final url = 'https://www.youtube.com/channel/$id?hl=en';
 
     return retry(httpClient, () async {
       final raw = await httpClient.getString(url);
-      final result = ChannelPage.parse(raw);
+      final result = await isolate.compute(raw);
 
       if (!result.isOk) {
         throw TransientFailureException('Channel page is broken');
